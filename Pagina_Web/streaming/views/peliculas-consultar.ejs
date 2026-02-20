@@ -1,0 +1,84 @@
+<%- include('partials/header', { pageTitle: 'Consultar Películas', activeTab: 'peliculas-consultar' }) %>
+
+<main class="main">
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="section-title">Catálogo de Películas</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Imagen</th>
+          <th>Nombre</th>
+          <th>Género</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <% if (peliculas.length === 0) { %>
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="icon">🎬</div>
+                No hay películas registradas.
+              </div>
+            </td>
+          </tr>
+        <% } %>
+
+        <% peliculas.forEach(p => { %>
+          <tr>
+            <td>
+                <% if (p.imagen) { %>
+                    <img src="<%= p.imagen %>" class="img-thumb" alt="poster"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                    <div class="img-placeholder" style="display:none">🎬</div>
+                <% } else { %>
+                    <div class="img-placeholder">🎬</div>
+                <% } %>
+            </td>
+            <td class="td-nombre"><%= p.nombre %></td>
+            <td><%= p.genero || '—' %></td>
+            <td class="td-desc" title="<%= p.descripcion || '' %>">
+              <%= p.descripcion || '—' %>
+            </td>
+            <td>
+              <span class="badge <%= p.activo ? 'badge-active' : 'badge-inactive' %>">
+                <%= p.activo ? 'Activo' : 'Inactivo' %>
+              </span>
+            </td>
+            <td>
+              <div class="td-actions">
+
+                <form action="/peliculas/<%= p.id %>/activar" method="POST" style="display:inline">
+                  <button type="submit" class="btn-sm btn-activar">Activar</button>
+                </form>
+
+                <form action="/peliculas/<%= p.id %>/inactivar" method="POST" style="display:inline">
+                  <button type="submit" class="btn-sm btn-inactivar">Inactivar</button>
+                </form>
+
+                <a href="/peliculas/<%= p.id %>/modificar" class="btn-sm btn-modificar">Modificar</a>
+
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bottom-bar">
+    <a href="/peliculas/registrar" class="btn btn-primary">+ Nueva película</a>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

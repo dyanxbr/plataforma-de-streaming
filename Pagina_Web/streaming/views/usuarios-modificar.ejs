@@ -1,0 +1,47 @@
+<%- include('partials/header', { pageTitle: 'Modificar Usuario', activeTab: 'usuarios' }) %>
+
+<main class="main">
+
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+  <div class="section-title">Modificar Usuario</div>
+
+  <div class="card-glass">
+    <form action="/usuarios/<%= usuarioEdit.id %>/modificar" method="POST">
+
+      <div class="form-grid">
+
+        <label>Nombre *</label>
+        <input type="text" name="nombre"
+               value="<%= usuarioEdit.nombre || '' %>" required/>
+
+        <label>Apellido Paterno</label>
+        <input type="text" name="apellido_paterno"
+               value="<%= usuarioEdit.apellido_paterno || '' %>"/>
+
+        <label>Apellido Materno</label>
+        <input type="text" name="apellido_materno"
+               value="<%= usuarioEdit.apellido_materno || '' %>"/>
+
+        <label>Correo *</label>
+        <input type="email" name="correo"
+               value="<%= usuarioEdit.correo || '' %>" required/>
+
+        <label>Nueva clave</label>
+        <input type="text" name="clave"
+               placeholder="Dejar vacío para no cambiar"/>
+
+      </div>
+
+      <div class="bottom-bar">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a href="/usuarios" class="btn btn-secondary">Cancelar</a>
+      </div>
+
+    </form>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

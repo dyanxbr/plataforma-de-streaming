@@ -1,0 +1,154 @@
+<%- include('partials/header', { pageTitle: 'Registro de Usuarios', activeTab: 'usuarios' }) %>
+
+<main class="main">
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="section-title">Registro de Usuarios</div>
+
+  <div class="reg-layout">
+
+    <!-- Col 1: Datos personales -->
+    <div class="form-section">
+      <div class="form-section-title">Datos personales</div>
+      <form action="/usuarios/registrar" method="POST" id="formUsuario">
+        <div class="form-col">
+
+          <div class="field-group">
+            <label>Nombre *</label>
+            <input type="text" name="nombre" placeholder="Nombre(s)" required/>
+          </div>
+
+          <div class="field-group">
+            <label>Apellido Paterno</label>
+            <input type="text" name="apellido_paterno" placeholder="Apellido paterno"/>
+          </div>
+
+          <div class="field-group">
+            <label>Apellido Materno</label>
+            <input type="text" name="apellido_materno" placeholder="Apellido materno"/>
+          </div>
+
+          <div class="field-group">
+            <label>Correo electrónico *</label>
+            <input type="email" name="correo" placeholder="correo@ejemplo.com" required/>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- Col 2: Datos de cuenta -->
+    <div class="form-section">
+      <div class="form-section-title">Datos de cuenta</div>
+      <div class="form-col">
+
+        <div class="field-group">
+          <label>Tipo de usuario *</label>
+          <select name="tipo_usuario" form="formUsuario" required>
+            <option value="">— Seleccionar —</option>
+            <option value="cliente">Cliente</option>
+            <option value="administrador">Administrador</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label>Clave generada (7 caracteres)</label>
+          <div class="clave-row">
+            <input type="text" name="claveGenerada" form="formUsuario"
+                   value="<%= claveGenerada %>" readonly/>
+            <a href="/usuarios" class="btn-regen" title="Nueva clave">↻</a>
+          </div>
+          <p class="hint-text">Se regenera automáticamente al recargar.</p>
+        </div>
+
+        <button type="submit" form="formUsuario" class="btn btn-primary">
+          Registrar Usuario
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Filtro -->
+  <form action="/usuarios" method="GET" class="filter-bar">
+    <label>Filtrar por tipo:</label>
+    <select name="filtroTipo" onchange="this.form.submit()">
+      <option value="" <%= filtroTipo === '' ? 'selected' : '' %>>Todos</option>
+      <option value="cliente" <%= filtroTipo === 'cliente' ? 'selected' : '' %>>Clientes</option>
+      <option value="administrador" <%= filtroTipo === 'administrador' ? 'selected' : '' %>>Administradores</option>
+    </select>
+  </form>
+
+  <!-- Tabla -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>Correo</th>
+          <th>Tipo</th>
+          <th>Fecha de Registro</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <% if (usuarios.length === 0) { %>
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="icon">👥</div>
+                No hay usuarios registrados.
+              </div>
+            </td>
+          </tr>
+        <% } %>
+
+        <% usuarios.forEach(u => { %>
+          <tr>
+            <td class="td-nombre">
+              <%= [u.nombre, u.apellido_paterno, u.apellido_materno].filter(Boolean).join(' ') %>
+            </td>
+            <td><%= u.correo %></td>
+            <td>
+              <span class="badge <%= u.tipo_usuario === 'administrador' ? 'badge-admin' : 'badge-cliente' %>">
+                <%= u.tipo_usuario === 'administrador' ? 'Administrador' : 'Cliente' %>
+              </span>
+            </td>
+            <td><%= u.fecha_registro ? new Date(u.fecha_registro).toLocaleDateString('es-MX') : '—' %></td>
+            <td>
+              <span class="badge <%= u.activo ? 'badge-active' : 'badge-inactive' %>">
+                <%= u.activo ? 'Activo' : 'Inactivo' %>
+              </span>
+            </td>
+            <td>
+              <div class="td-actions">
+
+                <form action="/usuarios/<%= u.id %>/activar" method="POST" style="display:inline">
+                  <button type="submit" class="btn-sm btn-activar">Activar</button>
+                </form>
+
+                <form action="/usuarios/<%= u.id %>/inactivar" method="POST" style="display:inline">
+                  <button type="submit" class="btn-sm btn-inactivar">Inactivar</button>
+                </form>
+
+                <a href="/usuarios/<%= u.id %>/modificar" class="btn-sm btn-modificar">Modificar</a>
+
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

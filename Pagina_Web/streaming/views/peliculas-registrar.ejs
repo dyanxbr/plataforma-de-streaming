@@ -1,0 +1,50 @@
+<%- include('partials/header', { pageTitle: 'Registrar Película', activeTab: 'peliculas-registrar' }) %>
+
+<main class="main">
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="section-title">Nueva Película</div>
+
+  <div class="card-glass">
+    <form action="/peliculas/registrar" method="POST" enctype="multipart/form-data">
+
+      <div class="form-grid">
+
+        <label>Nombre</label>
+        <input type="text" name="nombre" placeholder="Título de la película" required/>
+
+        <label>Género</label>
+        <select name="genero" required>
+          <option value="">— Seleccionar —</option>
+          <% generos.forEach(g => { %>
+            <option value="<%= g.id %>"><%= g.nombre %></option>
+          <% }) %>
+        </select>
+
+        <label>Link / URL</label>
+        <input type="text" name="link" placeholder="https://..."/>
+
+        <label>Imagen URL</label>
+        <input type="text" name="imagen" placeholder="https://... o deja vacío si subes archivo"/>
+
+        <label>Subir imagen</label>
+        <input type="file" name="imagenArchivo" accept="image/*"/>
+
+        <label>Descripción</label>
+        <textarea name="descripcion" placeholder="Sinopsis de la película..."></textarea>
+
+      </div>
+
+      <div class="bottom-bar">
+        <button type="submit" class="btn btn-primary">Registrar Película</button>
+        <a href="/peliculas/registrar" class="btn btn-secondary">Limpiar</a>
+      </div>
+
+    </form>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

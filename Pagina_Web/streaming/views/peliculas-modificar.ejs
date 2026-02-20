@@ -1,0 +1,63 @@
+<%- include('partials/header', { pageTitle: 'Modificar Película', activeTab: 'peliculas-consultar' }) %>
+
+<main class="main">
+
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="section-title">Modificar Película</div>
+
+  <div class="card-glass">
+    <form action="/peliculas/<%= pelicula.id %>/modificar" method="POST" enctype="multipart/form-data">
+
+      <div class="form-grid">
+
+        <label>Nombre</label>
+        <input type="text" name="nombre" value="<%= pelicula.nombre || '' %>" required/>
+
+        <label>Género</label>
+        <select name="genero" required>
+          <option value="">— Seleccionar —</option>
+          <% generos.forEach(g => { %>
+            <option value="<%= g.id %>"
+              <%= String(g.id) === String(pelicula.genero) ? 'selected' : '' %>>
+              <%= g.nombre %>
+            </option>
+          <% }) %>
+        </select>
+
+        <label>Link / URL</label>
+        <input type="text" name="link" value="<%= pelicula.link || '' %>"/>
+
+        <label>Imagen actual</label>
+        <div>
+          <% if (pelicula.imagen) { %>
+            <img src="<%= pelicula.imagen %>"
+                 style="height:80px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); margin-bottom:10px; display:block;"
+                 onerror="this.style.display='none'"/>
+          <% } else { %>
+            <div class="img-placeholder" style="margin-bottom:10px;">🎬</div>
+          <% } %>
+          <input type="text" name="imagen"
+                 value="<%= pelicula.imagen || '' %>"
+                 placeholder="URL de imagen o deja vacío si subes archivo"/>
+        </div>
+
+        <label>Nueva imagen</label>
+        <input type="file" name="imagenArchivo" accept="image/*"/>
+
+        <label>Descripción</label>
+        <textarea name="descripcion"><%= pelicula.descripcion || '' %></textarea>
+
+      </div>
+
+      <div class="bottom-bar">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a href="/peliculas/consultar" class="btn btn-secondary">Cancelar</a>
+      </div>
+
+    </form>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

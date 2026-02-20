@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= pageTitle %> — StreamAdmin</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">F&A<span>Vision</span></div>
+  <div class="header-user">
+    <span class="user-name"><%= usuario?.nombre || 'Admin' %></span>
+    <a href="/logout" class="btn-logout">Salir</a>
+  </div>
+</header>
+
+<nav class="tabs">
+  <a href="/peliculas/registrar"
+     class="tab <%= activeTab === 'peliculas-registrar' ? 'active' : '' %>">
+    Registrar Película
+  </a>
+  <a href="/peliculas/consultar"
+     class="tab <%= activeTab === 'peliculas-consultar' ? 'active' : '' %>">
+    Consultar Películas
+  </a>
+  <a href="/usuarios"
+     class="tab <%= activeTab === 'usuarios' ? 'active' : '' %>">
+    Registro de Usuarios
+  </a>
+</nav>

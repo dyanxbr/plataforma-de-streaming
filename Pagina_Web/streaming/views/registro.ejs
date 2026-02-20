@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crear cuenta — StreamFlix</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+<header class="header">
+  <div class="logo">F&A<span>Vision</span></div>
+</header>
+<main class="main">
+
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+  <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+    <div class="card-glass" style="max-width:420px; text-align:center; padding:32px;">
+      <div style="font-size:48px; margin-bottom:16px;">🎬</div>
+      <div class="section-title" style="margin-bottom:8px;">¡Bienvenido!</div>
+      <p style="color:var(--text2); font-size:14px; margin-bottom:24px;">
+        Tu cuenta fue creada exitosamente.<br/>
+        Guarda tu clave, la necesitarás para iniciar sesión.
+      </p>
+      <a href="/login" class="btn btn-primary" style="width:100%; text-align:center;">
+        Ir al inicio de sesión
+      </a>
+    </div>
+  <% } else { %>
+
+  <div class="section-title">Nueva Cuenta</div>
+
+  <div class="reg-layout">
+    <div class="form-section">
+      <div class="form-section-title">Datos personales</div>
+      <form action="/registro" method="POST" id="formRegistro">
+        <div class="form-col">
+
+          <div class="field-group">
+            <label>Nombre *</label>
+            <input type="text" name="nombre" placeholder="Nombre(s)" required/>
+          </div>
+
+          <div class="field-group">
+            <label>Apellido Paterno *</label>
+            <input type="text" name="apellido_paterno" placeholder="Apellido paterno" required/>
+          </div>
+
+          <div class="field-group">
+            <label>Apellido Materno</label>
+            <input type="text" name="apellido_materno" placeholder="Apellido materno"/>
+          </div>
+
+          <div class="field-group">
+            <label>Correo electrónico *</label>
+            <input type="email" name="correo" placeholder="correo@ejemplo.com" required/>
+          </div>
+
+          <div class="field-group">
+            <label>Clave de acceso</label>
+            <div class="clave-row">
+              <input type="text" id="claveVista" readonly
+                    style="color:var(--success); font-family:monospace; font-size:15px; letter-spacing:3px;"
+                    placeholder="Se generará al registrarte"/>
+            </div>
+            <p class="hint-text">
+              Se genera automáticamente al crear tu cuenta.<br/>
+              Guárdala, la necesitarás para iniciar sesión.
+            </p>
+          </div>
+
+        <button type="submit" form="formRegistro" class="btn btn-primary">
+          Crear Cuenta
+        </button>
+
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <% } %>
+
+</main>
+
+</body>
+</html>

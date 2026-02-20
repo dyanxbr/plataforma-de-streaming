@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Iniciar Sesión — F&A Vision</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="card-stripe"></div>
+  <div class="card-body">
+
+    <div class="logo-big">F&A<span>Vision</span></div>
+    <div class="subtitle">Panel de Administración</div>
+
+    <div class="avatar">
+      <div class="avatar-circle">👤</div>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <form action="/login" method="POST">
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" name="correo" placeholder="admin@ejemplo.com" required/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" name="clave" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn-login">INGRESAR</button>
+    </form>
+
+  </div>
+</div>
+
+</body>
+</html>
