@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F&A Vision | Registro de Cuenta</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<style>
+  .reg-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 32px;
+  }
+  @media(max-width:780px) { .reg-layout { grid-template-columns: 1fr; } }
+  .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 28px; }
+  .form-section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .form-col { display: flex; flex-direction: column; gap: 16px; }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .field-group input, .field-group select {
+    padding: 11px 14px; background: var(--input-bg); border: 1px solid var(--border2);
+    border-radius: 2px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-group input:focus, .field-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(229,9,20,0.1); }
+  .field-group input::placeholder { color: var(--muted); }
+  .field-group select option { background: #1a1a26; }
+  /* Modal campos */
+  .modal-col { display: flex; flex-direction: column; gap: 14px; }
+  .modal-col .field-group input { padding: 10px 14px; }
+</style>
+</head>
+<body>
+<main class="main">
+  <div id="alertBox"></div>
+  <div class="section-title">Registrar Cuenta</div>
+
+  <div class="reg-layout">
+    <div class="form-section">
+      <div class="form-section-title">Datos personales</div>
+      <div class="form-col">
+        <div class="field-group">
+          <label>Nombre *</label>
+          <input type="text" id="nombre" placeholder="Nombre(s)"/>
+        </div>
+        <div class="field-group">
+          <label>Apellido Paterno</label>
+          <input type="text" id="apPaterno" placeholder="Apellido paterno"/>
+        </div>
+        <div class="field-group">
+          <label>Apellido Materno</label>
+          <input type="text" id="apMaterno" placeholder="Apellido materno"/>
+        </div>
+        <div class="field-group">
+          <label>Correo electrónico *</label>
+          <input type="email" id="correo" placeholder="correo@ejemplo.com"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Datos de cuenta</div>
+      <div class="form-col">
+        <div class="field-group">
+          <label>Clave generada (7 caracteres)</label>
+          <div class="clave-row">
+            <input type="text" id="claveGenerada" readonly/>
+            <button type="button" class="btn-regen" onclick="generarClave()" title="Nueva clave">↻</button>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px;">Generada automáticamente.</p>
+        </div>
+        <div style="padding-top:4px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="registrarUsuario()">
+            Registrar Usuario
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+</main>
+
+<script>
+const API = 'https://api-streaming-production.up.railway.app';
+document.getElementById('headerUser').textContent = usuario?.nombre || 'Admin';
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fecha(f) { if(!f) return '—'; return new Date(f).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+
+function showAlert(msg, type='success') {
+  const box = document.getElementById('alertBox');
+  box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => box.innerHTML = '', 5000);
+}
+
+function genRandom() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({length:7}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+function generarClave() { document.getElementById('claveGenerada').value = genRandom(); }
+generarClave(); // genera al cargar
+
+async function registrarUsuario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const clave  = document.getElementById('claveGenerada').value;
+
+  if (!nombre || !correo) {
+    showAlert('Completa los campos requeridos (*).', 'error'); return;
+  }
+  try {
+    const res = await fetch(`${API}/api/usuarios`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nombre, correo, clave, tipo_usuario: 'cliente',
+        apellido_paterno: document.getElementById('apPaterno').value.trim(),
+        apellido_materno: document.getElementById('apMaterno').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showAlert(`✓ Usuario registrado. Clave asignada: <strong>${clave}</strong>`);
+      ['nombre','apPaterno','apMaterno','correo'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('tipoUsuario').value = '';
+      generarClave();
+      loadUsuarios();
+    } else {
+      showAlert(data.error || 'Error al registrar.', 'error');
+    }
+  } catch { showAlert('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

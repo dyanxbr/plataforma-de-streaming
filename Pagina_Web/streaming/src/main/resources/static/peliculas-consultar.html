@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamAdmin — Consultar Películas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+<header class="header">
+  <div class="logo">Stream<span>Admin</span></div>
+  <div class="header-user">
+    <span class="user-name" id="headerUser">—</span>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</header>
+<nav class="tabs">
+  <a href="peliculas-registrar.html" class="tab">Registrar Película</a>
+  <a href="peliculas-consultar.html" class="tab active">Consultar Películas</a>
+  <a href="clientes-consultar.html" class="tab">Consultar Clientes</a>
+  <a href="usuarios-registro.html" class="tab">Registro de Usuarios</a>
+</nav>
+<main class="main">
+  <div id="alertBox"></div>
+  <div class="section-title">Catálogo de Películas</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Imagen</th>
+          <th>Nombre de la Película</th>
+          <th>Género</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaPeliculas">
+        <tr class="loading-row"><td colspan="6">Cargando... <span class="spin">⟳</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:20px;">
+    <a href="peliculas-registrar.html" class="btn btn-primary">+ Nueva película</a>
+  </div>
+</main>
+
+<!-- Modal Modificar -->
+<div class="modal-overlay" id="modalMod">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Modificar Película</span>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div class="form-grid">
+        <label>Nombre</label>      <input type="text" id="editNombre"/>
+        <label>Género</label>      <select id="editGenero"><option value="">Cargando...</option></select>
+        <label>Link / URL</label>  <input type="text" id="editLink"/>
+        <label>Imagen</label>      <input type="text" id="editImagen" placeholder="nombre-imagen.jpg"/>
+        <label>Descripción</label> <textarea id="editDesc"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--border2);color:var(--text2);" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarEdit" onclick="guardarMod()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://api-streaming-production.up.railway.app';
+const usuario = JSON.parse(sessionStorage.getItem('usuario') || 'null');
+if (!usuario) window.location.href = 'login.html';
+document.getElementById('headerUser').textContent = usuario?.nombre || 'Admin';
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showAlert(msg, type='success') {
+  const box = document.getElementById('alertBox');
+  box.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => box.innerHTML = '', 4000);
+}
+
+let generosList = [];
+async function loadGeneros() {
+  try { const r = await fetch(`${API}/api/generos`); generosList = await r.json(); }
+  catch {}
+}
+loadGeneros();
+
+function fillGenSelect(selId, selectedId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = '<option value="">— Género —</option>';
+  generosList.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g.id; o.textContent = g.nombre;
+    if (String(g.id) === String(selectedId)) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+async function loadPeliculas() {
+  try {
+    const res = await fetch(`${API}/api/peliculas`);
+    const data = await res.json();
+    renderTabla(data);
+  } catch {
+    document.getElementById('tablaPeliculas').innerHTML =
+      '<tr class="loading-row"><td colspan="6">Error al cargar.</td></tr>';
+  }
+}
+loadPeliculas();
+
+function renderTabla(list) {
+  const tbody = document.getElementById('tablaPeliculas');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🎬</div>No hay películas.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(p => `
+    <tr>
+      <td>${p.imagen
+        ? `<img src="${esc(p.imagen)}" class="img-thumb" onerror="this.outerHTML='<div class=img-placeholder>🎬</div>'">`
+        : `<div class="img-placeholder">🎬</div>`}</td>
+      <td style="font-weight:500;color:var(--text);">${esc(p.nombre)}</td>
+      <td>${esc(p.genero||'—')}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+          title="${esc(p.descripcion||'')}">${esc(p.descripcion||'—')}</td>
+      <td><span class="badge ${p.activo?'badge-active':'badge-inactive'}">${p.activo?'Activo':'Inactivo'}</span></td>
+      <td>
+        <div class="td-actions">
+          <button class="btn-sm btn-activar"   onclick="estado(${p.id},1)">Activar</button>
+          <button class="btn-sm btn-inactivar" onclick="estado(${p.id},0)">Inactivar</button>
+          <button class="btn-sm btn-modificar" onclick='abrirModal(${JSON.stringify(p)})'>Modificar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function estado(id, activo) {
+  try {
+    const res = await fetch(`${API}/api/peliculas/${id}/estado`, {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ activo })
+    });
+    const d = await res.json();
+    showAlert(d.mensaje); loadPeliculas();
+  } catch { showAlert('Error al cambiar estado.', 'error'); }
+}
+
+function abrirModal(p) {
+  document.getElementById('editId').value = p.id;
+  document.getElementById('editNombre').value = p.nombre || '';
+  document.getElementById('editLink').value = p.link || '';
+  document.getElementById('editImagen').value = p.imagen || '';
+  document.getElementById('editDesc').value = p.descripcion || '';
+  fillGenSelect('editGenero', p.genero_id ?? p.genero);
+  document.getElementById('modalMod').classList.add('open');
+}
+function cerrarModal() { document.getElementById('modalMod').classList.remove('open'); }
+document.getElementById('modalMod').addEventListener('click', e => { if(e.target===document.getElementById('modalMod')) cerrarModal(); });
+
+async function guardarMod() {
+  const id = document.getElementById('editId').value;
+  const btn = document.getElementById('btnGuardarEdit');
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/api/peliculas/${id}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nombre:      document.getElementById('editNombre').value.trim(),
+        genero:      document.getElementById('editGenero').value,
+        link:        document.getElementById('editLink').value.trim(),
+        imagen:      document.getElementById('editImagen').value.trim(),
+        descripcion: document.getElementById('editDesc').value.trim()
+    })
+    });
+    const d = await res.json();
+    if (res.ok) { showAlert(d.mensaje||'Actualizada.'); cerrarModal(); loadPeliculas(); }
+    else showAlert(d.error||'Error.','error');
+  } catch { showAlert('Error de conexión.','error'); }
+  finally { btn.textContent='Guardar cambios'; btn.disabled=false; }
+}
+</script>
+</body>
+</html>
