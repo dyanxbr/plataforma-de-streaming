@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreamAdmin — Consultar Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+<header class="header">
+  <div class="logo">Stream<span>Admin</span></div>
+  <div class="header-user">
+    <span class="user-name" id="headerUser">—</span>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</header>
+<nav class="tabs">
+  <a href="peliculas-registrar.html" class="tab">Registrar Película</a>
+  <a href="peliculas-consultar.html" class="tab">Consultar Películas</a>
+  <a href="clientes-consultar.html" class="tab active">Consultar Clientes</a>
+  <a href="usuarios-registro.html" class="tab">Registro de Usuarios</a>
+</nav>
+<main class="main">
+  <div id="alertBox"></div>
+  <div class="section-title">Clientes Registrados</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre Completo</th>
+          <th>Correo / Usuario</th>
+          <th>Fecha de Registro</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaClientes">
+        <tr class="loading-row"><td colspan="5">Cargando... <span class="spin">⟳</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script>
+const API = 'https://api-streaming-production.up.railway.app';
+const usuario = JSON.parse(sessionStorage.getItem('usuario') || 'null');
+if (!usuario) window.location.href = 'login.html';
+document.getElementById('headerUser').textContent = usuario?.nombre || 'Admin';
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fecha(f) { if(!f) return '—'; return new Date(f).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+
+async function loadClientes() {
+  try {
+    const res = await fetch(`${API}/api/usuarios?tipo=cliente`);
+    const data = await res.json();
+    const tbody = document.getElementById('tablaClientes');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">👤</div>No hay clientes.</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map((c, i) => `
+      <tr>
+        <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+        <td style="font-weight:500;color:var(--text);">${esc([c.nombre,c.apellido_paterno,c.apellido_materno].filter(Boolean).join(' '))}</td>
+        <td>${esc(c.correo)}</td>
+        <td>${fecha(c.fecha_registro)}</td>
+        <td><span class="badge ${c.activo?'badge-active':'badge-inactive'}">${c.activo?'Activo':'Inactivo'}</span></td>
+      </tr>`).join('');
+  } catch {
+    document.getElementById('tablaClientes').innerHTML =
+      '<tr class="loading-row"><td colspan="5">Error al cargar.</td></tr>';
+  }
+}
+loadClientes();
+</script>
+</body>
+</html>c
