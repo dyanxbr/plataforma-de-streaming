@@ -5,9 +5,18 @@ require('dotenv').config();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json()); // Para recibir JSON en los body requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); 
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+app.use(express.json());
 
 // ==========================================
 // 1. INICIO DE SESIÓN (LOGIN) - Web y Móvil
@@ -38,9 +47,8 @@ app.post('/api/login', async (req, res) => {
 // 2. GESTIÓN DE PELÍCULAS
 // ==========================================
 
-// Obtener todas las películas (Para la tabla web y app móvil)
 app.get('/api/peliculas', async (req, res) => {
-    const { activa } = req.query; // Si mandas ?activa=1 solo trae las activas (ideal para la app móvil)
+    const { activa } = req.query;
     try {
         let query = `
             SELECT p.id, p.nombre, p.imagen, p.link, p.descripcion, p.activo, g.nombre as genero 
@@ -56,9 +64,7 @@ app.get('/api/peliculas', async (req, res) => {
     }
 });
 
-// Registrar una nueva película
 app.post('/api/peliculas', async (req, res) => {
-    // Nota: Para subir la imagen real necesitarías Multer, aquí guardamos el nombre/ruta
     const { nombre, genero, imagen, link, descripcion } = req.body;
     try {
         const [result] = await pool.query(
@@ -71,7 +77,6 @@ app.post('/api/peliculas', async (req, res) => {
     }
 });
 
-// Modificar película
 app.put('/api/peliculas/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre, genero, imagen, link, descripcion } = req.body;
@@ -86,10 +91,9 @@ app.put('/api/peliculas/:id', async (req, res) => {
     }
 });
 
-// Activar/Inactivar Película (Botones rojo y azul de la tabla)
 app.patch('/api/peliculas/:id/estado', async (req, res) => {
     const { id } = req.params;
-    const { activo } = req.body; // 1 para activar, 0 para inactivar
+    const { activo } = req.body;
     try {
         await pool.query('UPDATE peliculas SET activo = ? WHERE id = ?', [activo, id]);
         res.json({ mensaje: `Película ${activo ? 'activada' : 'inactivada'}` });
@@ -102,7 +106,6 @@ app.patch('/api/peliculas/:id/estado', async (req, res) => {
 // 3. GESTIÓN DE USUARIOS Y CLIENTES
 // ==========================================
 
-// Obtener usuarios (puedes filtrar por tipo_usuario: ?tipo=cliente o ?tipo=administrador)
 app.get('/api/usuarios', async (req, res) => {
     const { tipo } = req.query;
     try {
@@ -121,7 +124,6 @@ app.get('/api/usuarios', async (req, res) => {
     }
 });
 
-// Registrar un nuevo usuario (sirve para clientes o administradores)
 app.post('/api/usuarios', async (req, res) => {
     const { nombre, apellido_paterno, apellido_materno, correo, clave, tipo_usuario } = req.body;
     try {
@@ -131,7 +133,6 @@ app.post('/api/usuarios', async (req, res) => {
         );
         res.json({ mensaje: 'Usuario registrado con éxito', id: result.insertId });
     } catch (error) {
-        // Código de error 1062 es duplicado (ej: correo ya existe)
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ error: 'El correo ya está registrado' });
         }
@@ -139,7 +140,6 @@ app.post('/api/usuarios', async (req, res) => {
     }
 });
 
-// Actualizar usuario (Botón amarillo)
 app.put('/api/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido_paterno, apellido_materno, correo, clave } = req.body;
@@ -154,8 +154,6 @@ app.put('/api/usuarios/:id', async (req, res) => {
     }
 });
 
-// Activar/Inactivar o Eliminar usuario
-// Activar/Inactivar (Botón azul)
 app.patch('/api/usuarios/:id/estado', async (req, res) => {
     const { id } = req.params;
     const { activo } = req.body;
@@ -167,7 +165,6 @@ app.patch('/api/usuarios/:id/estado', async (req, res) => {
     }
 });
 
-// Eliminar usuario (Botón rojo - Soft delete o Hard delete según prefieras. Aquí es hard delete)
 app.delete('/api/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -190,7 +187,7 @@ app.get('/api/generos', async (req, res) => {
     }
 });
 
-// Arrancar el servidor
+// ✅ CORREGIDO: PORT del servidor separado del puerto de la BD
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor de Streaming corriendo en el puerto ${PORT}`);
